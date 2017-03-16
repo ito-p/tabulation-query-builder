@@ -43,29 +43,30 @@ tqb.setMatching({
 /**
 *
 * Indexing
-*   Specify what kind of index you want to summarize data.
+*   At first, indexing for aggregating
 *
-*   e.g) User count
+*   e.g) Calculate total payment for each target field
 *
 */
 
 tqb.setIndexing({
-  field: 'user_id',
-  method: 'count'
+  field: 'price',
+  method: 'sum'
 });
 
 /**
 *
 * Aggregating
-*   Specify the item you want to classify the indexed group.
+*   Aggregate using by indexing values
 *
-*   e.g) Group by total payment amount
+*   e.g) Count users by total payment ranges
 *
 */
 
 tqb.setAggregating({
-  field: 'price',
-  method: 'sum'
+  field: 'user_id',
+  method: 'count',
+  interval: 300
 });
 
 const query = tqb.build();

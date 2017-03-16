@@ -9,7 +9,6 @@ test('User count by payment amount', t => {
 
   tqb.setMatching({
     field: 'timestamp',
-    type: 'Date',
     range: [ '2017-01-01 00:00:00', '2017-01-03 23:59:59' ]
   });
 
@@ -34,7 +33,6 @@ test('Total payment by user id', t => {
 
   tqb.setMatching({
     field: 'timestamp',
-    type: 'Date',
     range: [ '2017-01-01 00:00:00', '2017-01-07 23:59:59' ]
   });
 

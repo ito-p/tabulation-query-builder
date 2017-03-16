@@ -5,7 +5,6 @@ import MatchingConfig from './MatchingConfig';
 test('Date range expression', t => {
   const config = new MatchingConfig({
     field: 'timestamp',
-    type: 'Date',
     range: [ '2017-01-01 00:00:00', '2017-01-03 23:59:59' ]
   });
 
@@ -20,11 +19,9 @@ test('Date range or expression', t => {
     or: [
       {
         field: 'timestamp',
-        type: 'Date',
         range: [ '2017-01-01 00:00:00', '2017-01-01 23:59:59' ]
       },{
         field: 'timestamp',
-        type: 'Date',
         range: [ '2017-01-03 00:00:00', '2017-01-03 23:59:59' ]
       }
     ]
@@ -41,18 +38,15 @@ test('String in expression', t => {
     and: [
       {
         field: 'user_id',
-        type: 'String',
         in: [ 1, 2, 3 ]
       },
       {
         or: [
           {
             field: 'timestamp',
-            type: 'Date',
             range: [ '2017-01-01 00:00:00', '2017-01-01 23:59:59' ]
           },{
             field: 'timestamp',
-            type: 'Date',
             range: [ '2017-01-03 00:00:00', '2017-01-03 23:59:59' ]
           }
         ]

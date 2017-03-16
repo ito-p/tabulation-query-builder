@@ -18,7 +18,6 @@ test('Aggregate user count by 300 interval', t => {
 test('Aggregate user count by 0-99, 100-199, 200-299, 300-399', t => {
   const config = new AggregatingConfig({
     field: 'user_id',
-    type: 'Number',
     method: 'count',
     categoryRange: [ 0, 100, 200, 300 ]
   });
