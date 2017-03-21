@@ -18,13 +18,24 @@ export default class AggregatingConfig {
       return this.parseWithInterval(table, method, indexedValue);
     }
 
-    if (this.config.categoryRange.length < 2) {
+    if (this.config.categoryRange && this.config.categoryRange.length < 2) {
       throw new Error('Invalid categoryRange. categoryRange must be more than 2');
     }
 
     if (this.config.categoryRange) {
       return this.parseWithCategoryRange(table, method, indexedValue);
     }
+
+    return this.parse(table, method, indexedValue);
+  }
+
+  parse(table, method, indexedValue) {
+    return squel
+      .select()
+      .field(`${method}(${this.config.field})`, 'value')
+      .field(indexedValue, 'category')
+      .from(table, 'indexing_table')
+      .group(indexedValue);
   }
 
   parseWithInterval(table, method, indexedValue) {

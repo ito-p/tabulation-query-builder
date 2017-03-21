@@ -2,6 +2,18 @@ import test from 'ava';
 
 import AggregatingConfig from './AggregatingConfig';
 
+test('Aggregate user count by indexed_value', t => {
+  const config = new AggregatingConfig({
+    field: 'user_id',
+    method: 'count'
+  });
+
+  t.is(
+    config.build('table', 'indexed_value').toString(),
+    'SELECT COUNT(user_id) AS "value", indexed_value AS "category" FROM table `indexing_table` GROUP BY indexed_value'
+  );
+});
+
 test('Aggregate user count by 300 interval', t => {
   const config = new AggregatingConfig({
     field: 'user_id',
