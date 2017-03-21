@@ -1,6 +1,6 @@
 {
   "name": "tabulation-query-builder",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Easy tabulation with generated SQL.",
   "main": "index.js",
   "repository": "https://github.com/ito-p/tabulation-query-builder",
@@ -16,9 +16,6 @@
   "author": "ito-p <not.1010.number@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "moment": "^2.17.1",
-    "mongoose": "^4.7.4",
-    "node-uuid": "^1.4.7",
     "squel": "^5.8.0"
   },
   "devDependencies": {
@@ -54,8 +51,7 @@
     "eslint-plugin-babel": "^4.0.0",
     "mysql": "mysqljs/mysql",
     "nodemon": "^1.11.0",
-    "power-assert": "^1.4.2",
-    "vorpal": "^1.11.4"
+    "power-assert": "^1.4.2"
   },
   "ava": {
     "files": "src/**/*.test.js",

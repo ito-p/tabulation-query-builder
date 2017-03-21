@@ -11,8 +11,8 @@ export default class MatchingConfig {
   build(table, indexingField, aggregatingField) {
     return squel
       .select()
-      .field(addBacktick(indexingField))
-      .field(addBacktick(aggregatingField))
+      .field(indexingField)
+      .field(aggregatingField)
       .from(table)
       .where(this.parse(squel, this.config));
   }
@@ -32,11 +32,11 @@ export default class MatchingConfig {
   }
 
   parseIn(field, inStatement) {
-    return `${addBacktick(field)} IN (${inStatement.map(statement => `"${statement}"`).join(',')})`;
+    return `${field} IN (${inStatement.map(statement => `"${statement}"`).join(',')})`;
   }
 
   parseRange(field, range) {
-    return `"${range[0]}" <= ${addBacktick(field)} AND ${addBacktick(field)} <= "${range[1]}"`;
+    return `"${range[0]}" <= ${field} AND ${field} <= "${range[1]}"`;
   }
 
   parseTerm(builder, conf) {

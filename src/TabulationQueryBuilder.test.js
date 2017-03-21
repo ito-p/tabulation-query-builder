@@ -23,7 +23,7 @@ test('User count by payment amount', t => {
     method: 'sum'
   });
 
-  t.is(tqb.build(), 'SELECT COUNT(`user_id`) AS "value", FLOOR(`indexed_value` / 300) AS "category" FROM (SELECT SUM(`price`) AS "indexed_value", `user_id` FROM (SELECT `price`, `user_id` FROM payment_logs WHERE ("2017-01-01 00:00:00" <= `timestamp` AND `timestamp` <= "2017-01-03 23:59:59")) `matching_table` GROUP BY `user_id`) `indexing_table` GROUP BY FLOOR(`indexed_value` / 300)');
+  t.is(tqb.build(), 'SELECT COUNT(`user_id`) AS "value", FLOOR(`indexed_value` / 300) AS "category" FROM (SELECT SUM(`price`) AS "indexed_value", `user_id` FROM (SELECT price, user_id FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-03 23:59:59")) `matching_table` GROUP BY `user_id`) `indexing_table` GROUP BY FLOOR(`indexed_value` / 300)');
 });
 
 test('Total payment by user id', t => {
@@ -46,5 +46,5 @@ test('Total payment by user id', t => {
     field: 'user_id'
   });
 
-  t.is(tqb.build(), 'SELECT SUM(`price`) AS "value", FLOOR(`user_id` / 1) AS "category" FROM (SELECT `user_id`, `price` FROM payment_logs WHERE ("2017-01-01 00:00:00" <= `timestamp` AND `timestamp` <= "2017-01-07 23:59:59")) `indexing_table` GROUP BY FLOOR(`user_id` / 1)');
+  t.is(tqb.build(), 'SELECT SUM(`price`) AS "value", FLOOR(`user_id` / 1) AS "category" FROM (SELECT user_id, price FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `indexing_table` GROUP BY FLOOR(`user_id` / 1)');
 });
