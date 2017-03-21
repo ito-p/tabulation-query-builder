@@ -1,4 +1,5 @@
 import squel from 'squel';
+import { addBacktick } from '../utils/StringDecorator';
 
 export default class MatchingConfig {
   config;
@@ -10,8 +11,8 @@ export default class MatchingConfig {
   build(table, indexingField, aggregatingField) {
     return squel
       .select()
-      .field(indexingField)
-      .field(aggregatingField)
+      .field(addBacktick(indexingField))
+      .field(addBacktick(aggregatingField))
       .from(table)
       .where(this.parse(squel, this.config));
   }
@@ -31,11 +32,11 @@ export default class MatchingConfig {
   }
 
   parseIn(field, inStatement) {
-    return `${field} IN (${inStatement.map(statement => `"${statement}"`).join(',')})`;
+    return `${addBacktick(field)} IN (${inStatement.map(statement => `"${statement}"`).join(',')})`;
   }
 
   parseRange(field, range) {
-    return `"${range[0]}" <= ${field} AND ${field} <= "${range[1]}"`;
+    return `"${range[0]}" <= ${addBacktick(field)} AND ${addBacktick(field)} <= "${range[1]}"`;
   }
 
   parseTerm(builder, conf) {

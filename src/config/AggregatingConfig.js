@@ -1,4 +1,5 @@
 import squel from 'squel';
+import { addBacktick } from '../utils/StringDecorator';
 
 export default class AggregatingConfig {
   config;
@@ -13,9 +14,10 @@ export default class AggregatingConfig {
 
   build(table, indexedValue) {
     const method = this.config.method.toUpperCase();
+    const indexedString = addBacktick(indexedValue);
 
     if (this.config.interval) {
-      return this.parseWithInterval(table, method, indexedValue);
+      return this.parseWithInterval(table, method, indexedString);
     }
 
     if (this.config.categoryRange && this.config.categoryRange.length < 2) {
@@ -23,19 +25,19 @@ export default class AggregatingConfig {
     }
 
     if (this.config.categoryRange) {
-      return this.parseWithCategoryRange(table, method, indexedValue);
+      return this.parseWithCategoryRange(table, method, indexedString);
     }
 
-    return this.parse(table, method, indexedValue);
+    return this.parse(table, method, indexedString);
   }
 
   parse(table, method, indexedValue) {
     return squel
       .select()
-      .field(`${method}(${this.config.field})`, 'value')
-      .field(indexedValue, 'category')
+      .field(`${method}(${addBacktick(this.field)})`, 'value')
+      .field(`${indexedValue}`, 'category')
       .from(table, 'indexing_table')
-      .group(indexedValue);
+      .group(`${indexedValue}`);
   }
 
   parseWithInterval(table, method, indexedValue) {
@@ -43,7 +45,7 @@ export default class AggregatingConfig {
 
     return squel
       .select()
-      .field(`${method}(${this.config.field})`, 'value')
+      .field(`${method}(${addBacktick(this.field)})`, 'value')
       .field(intervalString, 'category')
       .from(table, 'indexing_table')
       .group(intervalString);
@@ -65,7 +67,7 @@ export default class AggregatingConfig {
 
     return squel
       .select()
-      .field(`${method}(${this.config.field})`, 'value')
+      .field(`${method}(${addBacktick(this.field)})`, 'value')
       .field(categoryRangeQuery, 'category')
       .from(table, 'indexing_table')
       .group(categoryRangeQuery);

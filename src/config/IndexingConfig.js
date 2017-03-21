@@ -1,4 +1,5 @@
 import squel from 'squel';
+import { addBacktick } from '../utils/StringDecorator';
 
 export default class IndexingConfig {
   config;
@@ -17,12 +18,13 @@ export default class IndexingConfig {
 
   build(table, aggregatingField) {
     const method = this.config.method.toUpperCase();
+    const aggregatingString = addBacktick(aggregatingField);
 
     return squel
       .select()
-      .field(`${method}(${this.config.field})`, 'indexed_value')
-      .field(aggregatingField)
+      .field(`${method}(${addBacktick(this.field)})`, 'indexed_value')
+      .field(aggregatingString)
       .from(table, 'matching_table')
-      .group(aggregatingField);
+      .group(aggregatingString);
   }
 }
