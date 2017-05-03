@@ -48,3 +48,47 @@ test('Total payment by user id', t => {
 
   t.is(tqb.build(), 'SELECT SUM(`price`) AS "value", FLOOR(`user_id` / 1) AS "category" FROM (SELECT user_id, price FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `indexing_table` GROUP BY FLOOR(`user_id` / 1)');
 });
+
+test('Total user count by item name', t => {
+  const tqb = new TabulationQueryBuilder();
+
+  tqb.setTable('payment_logs');
+
+  tqb.setMatching({
+    field: 'timestamp',
+    range: [ '2017-01-01 00:00:00', '2017-01-07 23:59:59' ]
+  });
+
+  tqb.setAggregating({
+    field: 'user_id',
+    method: 'count'
+  });
+
+  tqb.setIndexing({
+    field: 'item'
+  });
+
+  t.is(tqb.build(), 'SELECT COUNT(`user_id`) AS "value", `indexed_value` AS "category" FROM (SELECT `item` AS "indexed_value", `user_id` FROM (SELECT item, user_id FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `matching_table` GROUP BY `user_id`, item) `indexing_table` GROUP BY `indexed_value`');
+});
+
+test('Total price by item name', t => {
+  const tqb = new TabulationQueryBuilder();
+
+  tqb.setTable('payment_logs');
+
+  tqb.setMatching({
+    field: 'timestamp',
+    range: [ '2017-01-01 00:00:00', '2017-01-07 23:59:59' ]
+  });
+
+  tqb.setAggregating({
+    field: 'price',
+    method: 'sum'
+  });
+
+  tqb.setIndexing({
+    field: 'item'
+  });
+
+  t.is(tqb.build(), 'SELECT SUM(`price`) AS "value", `item` AS "category" FROM (SELECT item, price FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `indexing_table` GROUP BY `item`');
+});

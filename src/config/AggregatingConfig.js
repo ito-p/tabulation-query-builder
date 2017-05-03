@@ -12,6 +12,10 @@ export default class AggregatingConfig {
     return this.config.field;
   }
 
+  get method() {
+    return this.config.method;
+  }
+
   build(table, indexedValue) {
     const method = this.config.method.toUpperCase();
     const indexedString = addBacktick(indexedValue);

@@ -16,15 +16,30 @@ export default class IndexingConfig {
     return this.config.method;
   }
 
-  build(table, aggregatingField) {
-    const method = this.config.method.toUpperCase();
+  build(table, aggregatingField, aggregatingMethod) {
     const aggregatingString = addBacktick(aggregatingField);
 
-    return squel
-      .select()
-      .field(`${method}(${addBacktick(this.field)})`, 'indexed_value')
-      .field(aggregatingString)
-      .from(table, 'matching_table')
-      .group(aggregatingString);
+    const query = squel
+      .select();
+
+    if (this.config.method) {
+      const method = this.config.method.toUpperCase();
+      query.field(`${method}(${addBacktick(this.field)})`, 'indexed_value');
+    } else {
+      query.field(addBacktick(this.field), 'indexed_value');
+    }
+
+    query.field(aggregatingString)
+      .from(table, 'matching_table');
+
+    if (!this.method && aggregatingMethod === 'count') {
+      query
+        .group(aggregatingString)
+        .group(this.field);
+    } else if (this.method) {
+      query.group(aggregatingString);
+    }
+
+    return query;
   }
 }
