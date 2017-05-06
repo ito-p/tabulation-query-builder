@@ -25,13 +25,13 @@ export default class TabulationQueryBuilder {
   }
 
   build() {
-    if (this.indexingConfig.method || this.aggregatingConfig.method === 'count') {
+    if ((this.indexingConfig.method && !this.indexingConfig.method.match(/each/)) || this.aggregatingConfig.method === 'count') {
       return this.buildWithIndexing();
     }
 
     const matchingTable = this.matchingConfig.build(this.table, this.indexingConfig.field, this.aggregatingConfig.field).toString();
 
-    return this.aggregatingConfig.build(this.addParen(matchingTable), this.indexingConfig.field).toString();
+    return this.aggregatingConfig.build(this.addParen(matchingTable), this.indexingConfig.field, this.indexingConfig.method).toString();
   }
 
   buildWithIndexing() {
@@ -39,7 +39,7 @@ export default class TabulationQueryBuilder {
 
     const indexingTable = this.indexingConfig.build(this.addParen(matchingTable), this.aggregatingConfig.field, this.aggregatingConfig.method).toString();
 
-    return this.aggregatingConfig.build(this.addParen(indexingTable), 'indexed_value').toString();
+    return this.aggregatingConfig.build(this.addParen(indexingTable), 'indexed_value', this.indexingConfig.method).toString();
   }
 
   addParen(str) {

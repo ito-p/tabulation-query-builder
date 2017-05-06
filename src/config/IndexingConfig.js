@@ -1,4 +1,5 @@
 import squel from 'squel';
+
 import { addBacktick } from '../utils/StringDecorator';
 
 export default class IndexingConfig {
@@ -22,7 +23,7 @@ export default class IndexingConfig {
     const query = squel
       .select();
 
-    if (this.config.method) {
+    if (this.config.method && !this.config.method.match(/each/)) {
       const method = this.config.method.toUpperCase();
       query.field(`${method}(${addBacktick(this.field)})`, 'indexed_value');
     } else {

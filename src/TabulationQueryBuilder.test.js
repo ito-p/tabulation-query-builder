@@ -92,3 +92,49 @@ test('Total price by item name', t => {
 
   t.is(tqb.build(), 'SELECT SUM(`price`) AS "value", `item` AS "category" FROM (SELECT item, price FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `indexing_table` GROUP BY `item`');
 });
+
+test('Total user count for each day', t => {
+  const tqb = new TabulationQueryBuilder();
+
+  tqb.setTable('payment_logs');
+
+  tqb.setMatching({
+    field: 'timestamp',
+    range: [ '2017-01-01 00:00:00', '2017-01-07 23:59:59' ]
+  });
+
+  tqb.setAggregating({
+    field: 'user_id',
+    method: 'count'
+  });
+
+  tqb.setIndexing({
+    field: 'timestamp',
+    method: 'eachDay'
+  });
+
+  t.is(tqb.build(), 'SELECT COUNT(`user_id`) AS "value", `indexed_value` AS "category" FROM (SELECT each_day AS "indexed_value", `user_id` FROM (SELECT DATE_FORMAT(`timestamp`, "%Y-%m-%d") AS each_day, user_id FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `matching_table` GROUP BY `user_id`, each_day) `indexing_table` GROUP BY `indexed_value`');
+});
+
+test('Average price for each day', t => {
+  const tqb = new TabulationQueryBuilder();
+
+  tqb.setTable('payment_logs');
+
+  tqb.setMatching({
+    field: 'timestamp',
+    range: [ '2017-01-01 00:00:00', '2017-01-07 23:59:59' ]
+  });
+
+  tqb.setAggregating({
+    field: 'price',
+    method: 'avg'
+  });
+
+  tqb.setIndexing({
+    field: 'timestamp',
+    method: 'eachDay'
+  });
+
+  t.is(tqb.build(), 'SELECT AVG(`price`) AS "value", DATE_FORMAT(`timestamp`, "%Y-%m-%d") AS "category" FROM (SELECT timestamp, price FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `indexing_table` GROUP BY DATE_FORMAT(`timestamp`, "%Y-%m-%d")');
+});

@@ -1,5 +1,8 @@
 import squel from 'squel';
+
 import { addBacktick } from '../utils/StringDecorator';
+
+import getDateFormatQuery from '../utils/getDateFormatQuery';
 
 export default class AggregatingConfig {
   config;
@@ -16,9 +19,13 @@ export default class AggregatingConfig {
     return this.config.method;
   }
 
-  build(table, indexedValue) {
+  build(table, indexedValue, indexingMethod) {
     const method = this.config.method.toUpperCase();
     const indexedString = addBacktick(indexedValue);
+
+    if (indexingMethod && indexingMethod.match(/each/)) {
+      return this.parseWithEachDate(table, method, indexedString, getDateFormatQuery(indexedString, indexingMethod));
+    }
 
     if (this.config.interval) {
       return this.parseWithInterval(table, method, indexedString);
@@ -42,6 +49,15 @@ export default class AggregatingConfig {
       .field(`${indexedValue}`, 'category')
       .from(table, 'indexing_table')
       .group(`${indexedValue}`);
+  }
+
+  parseWithEachDate(table, method, indexedValue, term) {
+    return squel
+      .select()
+      .field(`${method}(${addBacktick(this.field)})`, 'value')
+      .field(term, 'category')
+      .from(table, 'indexing_table')
+      .group(term);
   }
 
   parseWithInterval(table, method, indexedValue) {
