@@ -1,5 +1,4 @@
 import squel from 'squel';
-import { addBacktick } from '../utils/StringDecorator';
 
 export default class MatchingConfig {
   config;
@@ -8,10 +7,10 @@ export default class MatchingConfig {
     this.config = config;
   }
 
-  build(table, indexingField, aggregatingField) {
+  build(table, indexingField, aggregatingField, indexingFieldAs) {
     return squel
       .select()
-      .field(indexingField)
+      .field(indexingField, indexingFieldAs)
       .field(aggregatingField)
       .from(table)
       .where(this.parse(squel, this.config));

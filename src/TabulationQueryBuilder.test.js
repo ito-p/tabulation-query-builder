@@ -113,7 +113,7 @@ test('Total user count for each day', t => {
     method: 'eachDay'
   });
 
-  t.is(tqb.build(), 'SELECT COUNT(`user_id`) AS "value", `indexed_value` AS "category" FROM (SELECT each_day AS "indexed_value", `user_id` FROM (SELECT DATE_FORMAT(`timestamp`, "%Y-%m-%d") AS each_day, user_id FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `matching_table` GROUP BY `user_id`, each_day) `indexing_table` GROUP BY `indexed_value`');
+  t.is(tqb.build(), 'SELECT COUNT(`user_id`) AS "value", `indexed_value` AS "category" FROM (SELECT `timestamp` AS "indexed_value", `user_id` FROM (SELECT DATE_FORMAT(`timestamp`, "%Y-%m-%d") AS "timestamp", user_id FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `matching_table` GROUP BY `user_id`, timestamp) `indexing_table` GROUP BY `indexed_value`');
 });
 
 test('Average price for each day', t => {

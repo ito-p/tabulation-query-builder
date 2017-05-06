@@ -33,7 +33,7 @@ export default class IndexingConfig {
     query.field(aggregatingString)
       .from(table, 'matching_table');
 
-    if (!this.method && aggregatingMethod === 'count') {
+    if ((!this.method || (this.method && this.method.match(/each/))) && aggregatingMethod === 'count') {
       query
         .group(aggregatingString)
         .group(this.field);
