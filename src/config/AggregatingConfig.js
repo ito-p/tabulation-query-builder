@@ -24,7 +24,7 @@ export default class AggregatingConfig {
     const indexedString = addBacktick(indexedValue);
 
     if (indexingMethod && indexingMethod.match(/each/)) {
-      return this.parseWithEachDate(table, method, indexedString, getDateFormatQuery(indexedString, indexingMethod));
+      return this.parseWithEachDate(table, method, indexedString, getDateFormatQuery(this.config.db, indexedString, indexingMethod));
     }
 
     if (this.config.interval) {

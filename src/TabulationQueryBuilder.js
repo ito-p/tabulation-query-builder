@@ -9,10 +9,15 @@ import { addBacktick } from './utils/StringDecorator';
 import getDateFormatQuery from './utils/getDateFormatQuery';
 
 export default class TabulationQueryBuilder {
+  config = {};
   table;
   matchingConfig;
   indexingConfig;
   aggregatingConfig;
+
+  constructor(config = {}) {
+    this.config = config;
+  }
 
   setTable(table) {
     this.table = table;
@@ -27,7 +32,7 @@ export default class TabulationQueryBuilder {
   }
 
   setAggregating(config) {
-    this.aggregatingConfig = new AggregatingConfig(config);
+    this.aggregatingConfig = new AggregatingConfig({ ...config, ...this.config});
   }
 
   build() {
@@ -45,7 +50,7 @@ export default class TabulationQueryBuilder {
     let indexingFieldAs = null;
 
     if (this.indexingConfig.method && this.indexingConfig.method.match(/each/)) {
-      indexingField = getDateFormatQuery(addBacktick(this.indexingConfig.field), this.indexingConfig.method);
+      indexingField = getDateFormatQuery(this.config.db, addBacktick(this.indexingConfig.field), this.indexingConfig.method);
       indexingFieldAs = this.indexingConfig.field;
     } else {
       indexingField = this.indexingConfig.field;

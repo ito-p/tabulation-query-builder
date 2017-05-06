@@ -1,8 +1,22 @@
-export default function getDateFormatQuery(field, method) {
+export default function getDateFormatQuery(db, field, method) {
+  const isSqlite = db === 'sqlite';
+
   switch (method) {
-    case 'eachDays': return `DATE_FORMAT(${field}, "%Y-%m-%d")`;
-    case 'eachMonths': return `DATE_FORMAT(${field}, "%Y-%m")`;
-    case 'eachYears': return `DATE_FORMAT(${field}, "%Y")`;
-    case 'eachDayOfWeek': return `DATE_FORMAT(${field}, "%w")`;
+    case 'eachDays':
+      return isSqlite ?
+        `strftime("%Y-%m-%d", ${field})` :
+        `DATE_FORMAT(${field}, "%Y-%m-%d")`;
+    case 'eachMonths':
+      return isSqlite ?
+        `strftime("%Y-%m", ${field})` :
+        `DATE_FORMAT(${field}, "%Y-%m")`;
+    case 'eachYears':
+      return isSqlite ?
+        `strftime("%Y", ${field})` :
+        `DATE_FORMAT(${field}, "%Y")`;
+    case 'eachDayOfWeek':
+      return isSqlite ?
+        `strftime("%w", ${field})` :
+        `DATE_FORMAT(${field}, "%w")`;
   }
 }

@@ -138,3 +138,26 @@ test('Average price for each day', t => {
 
   t.is(tqb.build(), 'SELECT AVG(`price`) AS "value", DATE_FORMAT(`timestamp`, "%Y-%m-%d") AS "category" FROM (SELECT timestamp, price FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `indexing_table` GROUP BY DATE_FORMAT(`timestamp`, "%Y-%m-%d")');
 });
+
+test('Average price for each day with sqlite', t => {
+  const tqb = new TabulationQueryBuilder({ db: 'sqlite' });
+
+  tqb.setTable('payment_logs');
+
+  tqb.setMatching({
+    field: 'timestamp',
+    range: [ '2017-01-01 00:00:00', '2017-01-07 23:59:59' ]
+  });
+
+  tqb.setAggregating({
+    field: 'price',
+    method: 'avg'
+  });
+
+  tqb.setIndexing({
+    field: 'timestamp',
+    method: 'eachDays'
+  });
+
+  t.is(tqb.build(), 'SELECT AVG(`price`) AS "value", strftime("%Y-%m-%d", `timestamp`) AS "category" FROM (SELECT timestamp, price FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `indexing_table` GROUP BY strftime("%Y-%m-%d", `timestamp`)');
+});
