@@ -26,6 +26,8 @@ export default class AggregatingConfig {
 
     if (this.config.method === 'count') {
       query.field(`GROUP_CONCAT(${addBacktick('segment_ids')})`);
+    } else {
+      query.field(`GROUP_CONCAT(DISTINCT ${addBacktick(this.config.segment)})`, 'segment_ids');
     }
 
     return query;
