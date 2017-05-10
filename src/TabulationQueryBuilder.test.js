@@ -204,7 +204,7 @@ test('Aggregating field is segment field and Counting user by days', t => {
     method: 'eachDays'
   });
 
-  t.is(tqb.build(), 'SELECT COUNT(`user_id`) AS "value", `indexed_value` AS "category", GROUP_CONCAT(`segment_ids`) FROM (SELECT `timestamp` AS "indexed_value", `user_id`, `user_id` AS "segment_ids" FROM (SELECT DATE_FORMAT(`timestamp`, "%Y-%m-%d") AS "timestamp", user_id FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `matching_table` GROUP BY `user_id`, timestamp) `indexing_table` GROUP BY `indexed_value`');
+  t.is(tqb.build(), 'SELECT COUNT(`user_id`) AS "value", `indexed_value` AS "category", GROUP_CONCAT(`segment_ids`) AS "segment_ids" FROM (SELECT `timestamp` AS "indexed_value", `user_id`, `user_id` AS "segment_ids" FROM (SELECT DATE_FORMAT(`timestamp`, "%Y-%m-%d") AS "timestamp", user_id FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `matching_table` GROUP BY `user_id`, timestamp) `indexing_table` GROUP BY `indexed_value`');
 });
 
 test('Indexing field is segment field and Total price by user_id', t => {
