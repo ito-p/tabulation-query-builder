@@ -19,6 +19,18 @@ export default class AggregatingConfig {
     return this.config.method;
   }
 
+  addSegmentField(query) {
+    if (!this.config.segment) {
+      return query;
+    }
+
+    if (this.config.method === 'count') {
+      query.field(`GROUP_CONCAT(${addBacktick('segment_ids')})`);
+    }
+
+    return query;
+  }
+
   build(table, indexedValue, indexingMethod) {
     const method = this.config.method.toUpperCase();
     const indexedString = addBacktick(indexedValue);
@@ -43,32 +55,50 @@ export default class AggregatingConfig {
   }
 
   parse(table, method, indexedValue) {
-    return squel
+    const query = squel
       .select()
       .field(`${method}(${addBacktick(this.field)})`, 'value')
-      .field(`${indexedValue}`, 'category')
+      .field(`${indexedValue}`, 'category');
+
+    this.addSegmentField(query);
+
+    query
       .from(table, 'indexing_table')
       .group(`${indexedValue}`);
+
+    return query;
   }
 
   parseWithEachDate(table, method, indexedValue, term) {
-    return squel
+    const query = squel
       .select()
       .field(`${method}(${addBacktick(this.field)})`, 'value')
-      .field(term, 'category')
+      .field(term, 'category');
+
+    this.addSegmentField(query);
+
+    query
       .from(table, 'indexing_table')
       .group(term);
+
+    return query;
   }
 
   parseWithInterval(table, method, indexedValue) {
     const intervalString = `FLOOR(${indexedValue} / ${this.config.interval})`;
 
-    return squel
+    const query = squel
       .select()
       .field(`${method}(${addBacktick(this.field)})`, 'value')
-      .field(intervalString, 'category')
+      .field(intervalString, 'category');
+
+    this.addSegmentField(query);
+
+    query
       .from(table, 'indexing_table')
       .group(intervalString);
+
+    return query;
   }
 
   parseWithCategoryRange(table, method, indexedValue) {
@@ -85,11 +115,17 @@ export default class AggregatingConfig {
         .then(category);
     }, this);
 
-    return squel
+    const query = squel
       .select()
       .field(`${method}(${addBacktick(this.field)})`, 'value')
-      .field(categoryRangeQuery, 'category')
+      .field(categoryRangeQuery, 'category');
+
+    this.addSegmentField(query);
+
+    query
       .from(table, 'indexing_table')
       .group(categoryRangeQuery);
+
+    return query;
   }
 }

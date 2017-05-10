@@ -24,11 +24,11 @@ export default class TabulationQueryBuilder {
   }
 
   setMatching(config) {
-    this.matchingConfig = new MatchingConfig(config);
+    this.matchingConfig = new MatchingConfig({ ...config, ...this.config});
   }
 
   setIndexing(config) {
-    this.indexingConfig = new IndexingConfig(config);
+    this.indexingConfig = new IndexingConfig({ ...config, ...this.config});
   }
 
   setAggregating(config) {

@@ -30,8 +30,13 @@ export default class IndexingConfig {
       query.field(addBacktick(this.field), 'indexed_value');
     }
 
-    query.field(aggregatingString)
-      .from(table, 'matching_table');
+    query.field(aggregatingString);
+
+    if (this.config.segment) {
+      query.field(addBacktick(this.config.segment), 'segment_ids');
+    }
+
+    query.from(table, 'matching_table');
 
     if ((!this.method || (this.method && this.method.match(/each/))) && aggregatingMethod === 'count') {
       query
