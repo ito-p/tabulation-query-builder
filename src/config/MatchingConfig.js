@@ -8,12 +8,20 @@ export default class MatchingConfig {
   }
 
   build(table, indexingField, aggregatingField, indexingFieldAs) {
-    return squel
+    const query = squel
       .select()
       .field(indexingField, indexingFieldAs)
-      .field(aggregatingField)
+      .field(aggregatingField);
+
+    if (this.config.segment && this.config.segment !== indexingField && this.config.segment !== aggregatingField) {
+      query.field(this.config.segment);
+    }
+
+    query
       .from(table)
       .where(this.parse(squel, this.config));
+
+    return query;
   }
 
   parse(builder, conf) {
