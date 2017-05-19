@@ -155,10 +155,10 @@ test('Average price for each day', t => {
 
   tqb.setIndexing({
     field: 'timestamp',
-    method: 'eachDays'
+    method: 'eachWeeks'
   });
 
-  t.is(tqb.build(), 'SELECT AVG(`price`) AS "value", DATE_FORMAT(`timestamp`, "%Y-%m-%d") AS "category" FROM (SELECT timestamp, price FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `indexing_table` GROUP BY DATE_FORMAT(`timestamp`, "%Y-%m-%d")');
+  t.is(tqb.build(), 'SELECT AVG(`price`) AS "value", YEARWEEK(`timestamp`,3) AS "category" FROM (SELECT timestamp, price FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `indexing_table` GROUP BY YEARWEEK(`timestamp`,3)');
 });
 
 test('Average price for each day with sqlite', t => {
