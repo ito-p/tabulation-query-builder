@@ -36,6 +36,10 @@ export default class MatchingConfig {
     if (conf.in) {
       return this.parseIn(conf.field, conf.in);
     }
+
+    if (conf.operator) {
+      return this.parseOperator(conf.field, conf.operator, conf.value);
+    }
   }
 
   parseIn(field, inStatement) {
@@ -44,6 +48,10 @@ export default class MatchingConfig {
 
   parseRange(field, range) {
     return `"${range[0]}" <= ${field} AND ${field} <= "${range[1]}"`;
+  }
+
+  parseOperator(field, operator, value) {
+    return `${field} ${operator} "${value}"`;
   }
 
   parseTerm(builder, conf) {
