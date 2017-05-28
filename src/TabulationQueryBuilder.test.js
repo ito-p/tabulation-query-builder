@@ -294,7 +294,5 @@ test('Json item grouping', t => {
     field: 'detail->"$.view"'
   });
 
-  console.log(tqb.build());
-
   t.is(tqb.build(), 'SELECT COUNT(`user_id`) AS "value", `indexed_value` AS "category" FROM (SELECT `detail->"$.view"` AS "indexed_value", `user_id` FROM (SELECT detail->"$.view", user_id FROM actions WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `matching_table` GROUP BY `user_id`, `detail->"$.view"`) `indexing_table` GROUP BY `indexed_value`');
 });
