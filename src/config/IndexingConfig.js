@@ -45,7 +45,7 @@ export default class IndexingConfig {
     if (isDoubleGrouping) {
       query
         .group(aggregatingString)
-        .group(this.field);
+        .group(addBacktick(this.field));
     } else if (this.method) {
       query.group(aggregatingString);
     }

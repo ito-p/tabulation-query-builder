@@ -90,7 +90,7 @@ test('Total user count by item name', t => {
     field: 'item'
   });
 
-  t.is(tqb.build(), 'SELECT COUNT(`user_id`) AS "value", `indexed_value` AS "category" FROM (SELECT `item` AS "indexed_value", `user_id` FROM (SELECT item, user_id FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `matching_table` GROUP BY `user_id`, item) `indexing_table` GROUP BY `indexed_value`');
+  t.is(tqb.build(), 'SELECT COUNT(`user_id`) AS "value", `indexed_value` AS "category" FROM (SELECT `item` AS "indexed_value", `user_id` FROM (SELECT item, user_id FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `matching_table` GROUP BY `user_id`, `item`) `indexing_table` GROUP BY `indexed_value`');
 });
 
 test('Total price by item name', t => {
@@ -135,7 +135,7 @@ test('Total user count for each day', t => {
     method: 'eachDays'
   });
 
-  t.is(tqb.build(), 'SELECT COUNT(`user_id`) AS "value", `indexed_value` AS "category" FROM (SELECT `timestamp` AS "indexed_value", `user_id` FROM (SELECT DATE_FORMAT(`timestamp`, "%Y-%m-%d") AS "timestamp", user_id FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `matching_table` GROUP BY `user_id`, timestamp) `indexing_table` GROUP BY `indexed_value`');
+  t.is(tqb.build(), 'SELECT COUNT(`user_id`) AS "value", `indexed_value` AS "category" FROM (SELECT `timestamp` AS "indexed_value", `user_id` FROM (SELECT DATE_FORMAT(`timestamp`, "%Y-%m-%d") AS "timestamp", user_id FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `matching_table` GROUP BY `user_id`, `timestamp`) `indexing_table` GROUP BY `indexed_value`');
 });
 
 test('Average price for each day', t => {
@@ -204,7 +204,7 @@ test('Aggregating field is segment field and Counting user by days', t => {
     method: 'eachDays'
   });
 
-  t.is(tqb.build(), 'SELECT COUNT(`user_id`) AS "value", `indexed_value` AS "category", GROUP_CONCAT(DISTINCT `segment_ids`) AS "segment_ids" FROM (SELECT `timestamp` AS "indexed_value", `user_id`, `user_id` AS "segment_ids" FROM (SELECT DATE_FORMAT(`timestamp`, "%Y-%m-%d") AS "timestamp", user_id FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `matching_table` GROUP BY `user_id`, timestamp) `indexing_table` GROUP BY `indexed_value`');
+  t.is(tqb.build(), 'SELECT COUNT(`user_id`) AS "value", `indexed_value` AS "category", GROUP_CONCAT(DISTINCT `segment_ids`) AS "segment_ids" FROM (SELECT `timestamp` AS "indexed_value", `user_id`, `user_id` AS "segment_ids" FROM (SELECT DATE_FORMAT(`timestamp`, "%Y-%m-%d") AS "timestamp", user_id FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `matching_table` GROUP BY `user_id`, `timestamp`) `indexing_table` GROUP BY `indexed_value`');
 });
 
 test('Indexing field is segment field and Total price by user_id', t => {
@@ -249,7 +249,7 @@ test('Segment field is not aggregating and indexing fields, and Counting item by
     method: 'eachDays'
   });
 
-  t.is(tqb.build(), 'SELECT COUNT(`item`) AS "value", `indexed_value` AS "category", GROUP_CONCAT(DISTINCT `segment_ids`) AS "segment_ids" FROM (SELECT `timestamp` AS "indexed_value", `item`, GROUP_CONCAT(`user_id`) AS "segment_ids" FROM (SELECT DATE_FORMAT(`timestamp`, "%Y-%m-%d") AS "timestamp", item, user_id FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `matching_table` GROUP BY `item`, timestamp) `indexing_table` GROUP BY `indexed_value`');
+  t.is(tqb.build(), 'SELECT COUNT(`item`) AS "value", `indexed_value` AS "category", GROUP_CONCAT(DISTINCT `segment_ids`) AS "segment_ids" FROM (SELECT `timestamp` AS "indexed_value", `item`, GROUP_CONCAT(`user_id`) AS "segment_ids" FROM (SELECT DATE_FORMAT(`timestamp`, "%Y-%m-%d") AS "timestamp", item, user_id FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `matching_table` GROUP BY `item`, `timestamp`) `indexing_table` GROUP BY `indexed_value`');
 });
 
 test('Segment field is not aggregating and indexing fields, and Counting item by days', t => {
@@ -273,4 +273,28 @@ test('Segment field is not aggregating and indexing fields, and Counting item by
   });
 
   t.is(tqb.build(), 'SELECT AVG(`price`) AS "value", DATE_FORMAT(`timestamp`, "%Y-%m-%d") AS "category", GROUP_CONCAT(DISTINCT `user_id`) AS "segment_ids" FROM (SELECT timestamp, price, user_id FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `indexing_table` GROUP BY DATE_FORMAT(`timestamp`, "%Y-%m-%d")');
+});
+
+test('Json item grouping', t => {
+  const tqb = new TabulationQueryBuilder();
+
+  tqb.setTable('actions');
+
+  tqb.setMatching({
+    field: 'timestamp',
+    range: [ '2017-01-01 00:00:00', '2017-01-07 23:59:59' ]
+  });
+
+  tqb.setAggregating({
+    field: 'user_id',
+    method: 'count'
+  });
+
+  tqb.setIndexing({
+    field: 'detail->"$.view"'
+  });
+
+  console.log(tqb.build());
+
+  t.is(tqb.build(), 'SELECT COUNT(`user_id`) AS "value", `indexed_value` AS "category" FROM (SELECT `detail->"$.view"` AS "indexed_value", `user_id` FROM (SELECT detail->"$.view", user_id FROM actions WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `matching_table` GROUP BY `user_id`, `detail->"$.view"`) `indexing_table` GROUP BY `indexed_value`');
 });
