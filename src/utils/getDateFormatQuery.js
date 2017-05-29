@@ -22,5 +22,9 @@ export default function getDateFormatQuery(db, field, method) {
       return isSqlite ?
         `strftime("%w", ${field})` :
         `DATE_FORMAT(${field}, "%w")`;
+    case 'eachTimeOfHour':
+      return isSqlite ?
+        `strftime("%H", ${field})` :
+        `DATE_FORMAT(${field}, "%H")`;
   }
 }
