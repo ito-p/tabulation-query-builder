@@ -17,6 +17,14 @@ export default class IndexingConfig {
     return this.config.method;
   }
 
+  get interval() {
+    return this.config.interval;
+  }
+
+  get categoryRange() {
+    return this.config.categoryRange;
+  }
+
   build(table, aggregatingField, aggregatingMethod) {
     const aggregatingString = addBacktick(aggregatingField);
 

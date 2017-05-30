@@ -42,7 +42,7 @@ export default class TabulationQueryBuilder {
 
     const matchingTable = this.matchingConfig.build(this.table, this.indexingConfig.field, this.aggregatingConfig.field).toString();
 
-    return this.aggregatingConfig.build(this.addParen(matchingTable), this.indexingConfig.field, this.indexingConfig.method).toString();
+    return this.aggregatingConfig.build(this.addParen(matchingTable), this.indexingConfig).toString();
   }
 
   buildWithIndexing() {
@@ -60,7 +60,7 @@ export default class TabulationQueryBuilder {
 
     const indexingTable = this.indexingConfig.build(this.addParen(matchingTable), this.aggregatingConfig.field, this.aggregatingConfig.method).toString();
 
-    return this.aggregatingConfig.build(this.addParen(indexingTable), 'indexed_value').toString();
+    return this.aggregatingConfig.build(this.addParen(indexingTable), { field: 'indexed_value', interval: this.indexingConfig.interval, categoryRange: this.indexingConfig.categoryRange }).toString();
   }
 
   addParen(str) {

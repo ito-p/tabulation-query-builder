@@ -33,27 +33,26 @@ export default class AggregatingConfig {
     return query;
   }
 
-  build(table, indexedValue, indexingMethod) {
+  build(table, indexingConfig) {
     const method = this.config.method.toUpperCase();
-    const indexedString = addBacktick(indexedValue);
 
-    if (indexingMethod && indexingMethod.match(/each/)) {
-      return this.parseWithEachDate(table, method, indexedString, getDateFormatQuery(this.config.db, indexedString, indexingMethod));
+    if (indexingConfig.method && indexingConfig.method.match(/each/)) {
+      return this.parseWithEachDate(table, method, indexingConfig, getDateFormatQuery(this.config.db, addBacktick(indexingConfig.field), indexingConfig.method));
     }
 
-    if (this.config.interval) {
-      return this.parseWithInterval(table, method, indexedString);
+    if (indexingConfig.interval) {
+      return this.parseWithInterval(table, method, indexingConfig);
     }
 
-    if (this.config.categoryRange && this.config.categoryRange.length < 2) {
+    if (indexingConfig.categoryRange && indexingConfig.categoryRange.length < 2) {
       throw new Error('Invalid categoryRange. categoryRange must be more than 2');
     }
 
-    if (this.config.categoryRange) {
-      return this.parseWithCategoryRange(table, method, indexedString);
+    if (indexingConfig.categoryRange) {
+      return this.parseWithCategoryRange(table, method, indexingConfig);
     }
 
-    return this.parse(table, method, indexedString);
+    return this.parse(table, method, addBacktick(indexingConfig.field));
   }
 
   parse(table, method, indexedValue) {
@@ -86,8 +85,8 @@ export default class AggregatingConfig {
     return query;
   }
 
-  parseWithInterval(table, method, indexedValue) {
-    const intervalString = `FLOOR(${indexedValue} / ${this.config.interval})`;
+  parseWithInterval(table, method, indexingConfig) {
+    const intervalString = `FLOOR(${addBacktick(indexingConfig.field)} / ${indexingConfig.interval})`;
 
     const query = squel
       .select()
@@ -103,8 +102,8 @@ export default class AggregatingConfig {
     return query;
   }
 
-  parseWithCategoryRange(table, method, indexedValue) {
-    const categoryRange = this.config.categoryRange;
+  parseWithCategoryRange(table, method, indexingConfig) {
+    const categoryRange = indexingConfig.categoryRange;
     const categoryRangeQuery = squel.case();
 
     categoryRange.forEach((category, index) => {
@@ -113,7 +112,7 @@ export default class AggregatingConfig {
       }
 
       categoryRangeQuery
-        .when(`${category} <= ${indexedValue} AND ${indexedValue} < ${categoryRange[index + 1]}`)
+        .when(`${category} <= ${addBacktick(indexingConfig.field)} AND ${addBacktick(indexingConfig.field)} < ${categoryRange[index + 1]}`)
         .then(category);
     }, this);
 
