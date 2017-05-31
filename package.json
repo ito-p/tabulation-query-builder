@@ -1,6 +1,6 @@
 {
   "name": "tabulation-query-builder",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "Easy tabulation with generated SQL.",
   "main": "index.js",
   "repository": "https://github.com/ito-p/tabulation-query-builder",

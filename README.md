@@ -1,5 +1,11 @@
 > Easy tabulation with generated SQL.
 
+# BREAKING CHANGES
+
+## 0.0.13 to 0.0.14
+
+- If you set interval or categoryRange option, you set with setAggregating until now. Please write in setIndexing like example.
+
 # Introduction
 
 When I come up with a hypothesis, I want to confirm it soon.
@@ -51,7 +57,8 @@ tqb.setMatching({
 
 tqb.setIndexing({
   field: 'price',
-  method: 'sum'
+  method: 'sum',
+  interval: 300
 });
 
 /**
@@ -65,8 +72,7 @@ tqb.setIndexing({
 
 tqb.setAggregating({
   field: 'user_id',
-  method: 'count',
-  interval: 300
+  method: 'count'
 });
 
 const query = tqb.build();
@@ -74,7 +80,7 @@ const query = tqb.build();
 ## Generated SQL
 
 ```sql
-SELECT COUNT(user_id) AS "value", FLOOR(indexed_value / 300) AS "category" FROM (SELECT SUM(price) AS "indexed_value", user_id FROM (SELECT price, user_id FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-03 23:59:59")) `matching_table` GROUP BY user_id) `indexing_table` GROUP BY FLOOR(indexed_value / 300);
+SELECT COUNT(`user_id`) AS "value", FLOOR(`indexed_value_0` / 300) AS "category" FROM (SELECT SUM(`indexed_value_0`) AS "indexed_value_0", `user_id` FROM (SELECT price AS "indexed_value_0", user_id FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-03 23:59:59")) `matching_table` GROUP BY `user_id`) `indexing_table` GROUP BY FLOOR(`indexed_value_0` / 300)
 ```
 
 ## Query result
