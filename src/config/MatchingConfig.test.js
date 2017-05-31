@@ -9,8 +9,8 @@ test('Date range expression', t => {
   });
 
   t.is(
-    config.build('payment_logs', 'user_id', 'price').toString(),
-    'SELECT user_id, price FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-03 23:59:59")'
+    config.build('payment_logs', [ { field: 'user_id'} ], { field: 'price' }).toString(),
+    'SELECT user_id AS "indexed_value_0", price FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-03 23:59:59")'
   );
 });
 
@@ -28,8 +28,8 @@ test('Date range or expression', t => {
   });
 
   t.is(
-    config.build('payment_logs', 'user_id', 'price').toString(),
-    'SELECT user_id, price FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-01 23:59:59" OR "2017-01-03 00:00:00" <= timestamp AND timestamp <= "2017-01-03 23:59:59")'
+    config.build('payment_logs', [ { field: 'user_id'} ], { field: 'price' }).toString(),
+    'SELECT user_id AS "indexed_value_0", price FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-01 23:59:59" OR "2017-01-03 00:00:00" <= timestamp AND timestamp <= "2017-01-03 23:59:59")'
   );
 });
 
@@ -55,8 +55,8 @@ test('String in expression', t => {
   });
 
   t.is(
-    config.build('payment_logs', 'user_id', 'price').toString(),
-    'SELECT user_id, price FROM payment_logs WHERE (user_id IN ("1","2","3") AND ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-01 23:59:59" OR "2017-01-03 00:00:00" <= timestamp AND timestamp <= "2017-01-03 23:59:59"))'
+    config.build('payment_logs', [ { field: 'user_id'} ], { field: 'price' }).toString(),
+    'SELECT user_id AS "indexed_value_0", price FROM payment_logs WHERE (user_id IN ("1","2","3") AND ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-01 23:59:59" OR "2017-01-03 00:00:00" <= timestamp AND timestamp <= "2017-01-03 23:59:59"))'
   );
 });
 
@@ -84,7 +84,7 @@ test('operator and value in expression', t => {
   });
 
   t.is(
-    config.build('payment_logs', 'user_id', 'price').toString(),
-    'SELECT user_id, price FROM payment_logs WHERE (user_id IN ("1","2","3") AND (timestamp >= "2017-01-01 00:00:00" AND timestamp < "2017-01-03 23:59:59"))'
+    config.build('payment_logs', [ { field: 'user_id'} ], { field: 'price' }).toString(),
+    'SELECT user_id AS "indexed_value_0", price FROM payment_logs WHERE (user_id IN ("1","2","3") AND (timestamp >= "2017-01-01 00:00:00" AND timestamp < "2017-01-03 23:59:59"))'
   );
 });

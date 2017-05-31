@@ -1,5 +1,9 @@
 import squel from 'squel';
 
+import getDateFormatQuery from '../utils/getDateFormatQuery';
+
+import { addBacktick, getIndexedValue } from '../utils/StringDecorator';
+
 export default class MatchingConfig {
   config;
 
@@ -7,13 +11,22 @@ export default class MatchingConfig {
     this.config = config;
   }
 
-  build(table, indexingField, aggregatingField, indexingFieldAs) {
-    const query = squel
-      .select()
-      .field(indexingField, indexingFieldAs)
-      .field(aggregatingField);
+  build(table, indexings, aggregating) {
+    const query = squel.select();
 
-    if (this.config.segment && this.config.segment !== indexingField && this.config.segment !== aggregatingField) {
+    indexings.forEach((indexing, index) => {
+      if (indexing.method && indexing.method.match(/each/) && aggregating.method === 'count') {
+        const dateFormatField = getDateFormatQuery(this.config.db, addBacktick(indexing.field), indexing.method);
+
+        query.field(dateFormatField, getIndexedValue(index));
+      } else {
+        query.field(indexing.field, getIndexedValue(index));
+      }
+    });
+
+    query.field(aggregating.field);
+
+    if (this.config.segment && this.config.segment !== aggregating.field) {
       query.field(this.config.segment);
     }
 

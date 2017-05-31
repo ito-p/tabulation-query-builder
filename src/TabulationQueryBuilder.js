@@ -4,15 +4,11 @@ import IndexingConfig from './config/IndexingConfig';
 
 import AggregatingConfig from './config/AggregatingConfig';
 
-import { addBacktick } from './utils/StringDecorator';
-
-import getDateFormatQuery from './utils/getDateFormatQuery';
-
 export default class TabulationQueryBuilder {
   config = {};
   table;
   matchingConfig;
-  indexingConfig;
+  indexingConfigList = [];
   aggregatingConfig;
 
   constructor(config = {}) {
@@ -28,7 +24,13 @@ export default class TabulationQueryBuilder {
   }
 
   setIndexing(config) {
-    this.indexingConfig = new IndexingConfig({ ...config, ...this.config});
+    this.indexingConfigList[0] = new IndexingConfig({ ...config, ...this.config});
+  }
+
+  setIndexings(configs) {
+    this.indexingConfigList = configs.map((config, index) => {
+      return new IndexingConfig({ ...config, ...this.config, index});
+    });
   }
 
   setAggregating(config) {
@@ -40,27 +42,23 @@ export default class TabulationQueryBuilder {
       return this.buildWithIndexing();
     }
 
-    const matchingTable = this.matchingConfig.build(this.table, this.indexingConfig.field, this.aggregatingConfig.field).toString();
+    const matchingTable = this.matchingConfig.build(this.table, this.indexingConfigList, this.aggregatingConfig).toString();
 
-    return this.aggregatingConfig.build(this.addParen(matchingTable), this.indexingConfig).toString();
+    return this.aggregatingConfig.build(this.addParen(matchingTable), this.indexingConfigList).toString();
   }
 
   buildWithIndexing() {
-    let indexingField;
-    let indexingFieldAs = null;
+    const matchingTable = this.matchingConfig.build(this.table, this.indexingConfigList, this.aggregatingConfig).toString();
 
-    if (this.indexingConfig.method && this.indexingConfig.method.match(/each/)) {
-      indexingField = getDateFormatQuery(this.config.db, addBacktick(this.indexingConfig.field), this.indexingConfig.method);
-      indexingFieldAs = this.indexingConfig.field;
-    } else {
-      indexingField = this.indexingConfig.field;
-    }
+    const indexingTable = IndexingConfig.build(this.addParen(matchingTable), this.aggregatingConfig, this.indexingConfigList, this.config.segment).toString();
 
-    const matchingTable = this.matchingConfig.build(this.table, indexingField, this.aggregatingConfig.field, indexingFieldAs).toString();
-
-    const indexingTable = this.indexingConfig.build(this.addParen(matchingTable), this.aggregatingConfig.field, this.aggregatingConfig.method).toString();
-
-    return this.aggregatingConfig.build(this.addParen(indexingTable), { field: 'indexed_value', interval: this.indexingConfig.interval, categoryRange: this.indexingConfig.categoryRange }).toString();
+    return this.aggregatingConfig.build(this.addParen(indexingTable), this.indexingConfigList.map(config => {
+      return {
+        field: config.field,
+        interval: config.interval,
+        categoryRange: config.categoryRange
+      };
+    })).toString();
   }
 
   addParen(str) {

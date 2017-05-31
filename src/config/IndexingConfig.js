@@ -1,6 +1,6 @@
 import squel from 'squel';
 
-import { addBacktick } from '../utils/StringDecorator';
+import { addBacktick, getIndexedValue } from '../utils/StringDecorator';
 
 export default class IndexingConfig {
   config;
@@ -25,38 +25,49 @@ export default class IndexingConfig {
     return this.config.categoryRange;
   }
 
-  build(table, aggregatingField, aggregatingMethod) {
-    const aggregatingString = addBacktick(aggregatingField);
-
-    const isDoubleGrouping = (!this.method || (this.method && this.method.match(/each/))) && aggregatingMethod === 'count';
+  static build(table, aggregating, indexings, segment) {
+    const aggregatingString = addBacktick(aggregating.field);
 
     const query = squel
       .select();
 
-    if (this.config.method && !this.config.method.match(/each/)) {
-      const method = this.config.method.toUpperCase();
-      query.field(`${method}(${addBacktick(this.field)})`, 'indexed_value');
-    } else {
-      query.field(addBacktick(this.field), 'indexed_value');
+    let isAggregatingGrouping = false;
+
+    indexings.forEach((indexing, index) => {
+      const isNeedGrouping = (!indexing.method || (indexing.method && indexing.method.match(/each/))) && aggregating.method === 'count';
+
+      const indexedField = addBacktick(getIndexedValue(index));
+
+      if (indexing.method && !indexing.method.match(/each/)) {
+        const method = indexing.method.toUpperCase();
+
+        query.field(`${method}(${indexedField})`, getIndexedValue(index));
+      } else {
+        query.field(indexedField);
+      }
+
+      if (segment && isNeedGrouping && segment !== aggregating.field && !indexings.find(i => i.field === segment)) {
+        query.field(`GROUP_CONCAT(${addBacktick(segment)})`, 'segment_ids');
+      } else if (segment) {
+        query.field(addBacktick(segment), 'segment_ids');
+      }
+
+      if (isNeedGrouping) {
+        isAggregatingGrouping = true;
+
+        query.group(addBacktick(getIndexedValue(index)));
+      } else if (indexing.method) {
+        isAggregatingGrouping = true;
+      }
+    });
+
+    if (isAggregatingGrouping) {
+      query.group(aggregatingString);
     }
 
     query.field(aggregatingString);
 
-    if (this.config.segment && isDoubleGrouping && this.config.segment !== aggregatingField && this.config.segment !== this.field) {
-      query.field(`GROUP_CONCAT(${addBacktick(this.config.segment)})`, 'segment_ids');
-    } else if (this.config.segment) {
-      query.field(addBacktick(this.config.segment), 'segment_ids');
-    }
-
     query.from(table, 'matching_table');
-
-    if (isDoubleGrouping) {
-      query
-        .group(aggregatingString)
-        .group(addBacktick(this.field));
-    } else if (this.method) {
-      query.group(aggregatingString);
-    }
 
     return query;
   }

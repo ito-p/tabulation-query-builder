@@ -1,6 +1,6 @@
 import squel from 'squel';
 
-import { addBacktick } from '../utils/StringDecorator';
+import { addBacktick, getIndexedValue } from '../utils/StringDecorator';
 
 import getDateFormatQuery from '../utils/getDateFormatQuery';
 
@@ -19,6 +19,14 @@ export default class AggregatingConfig {
     return this.config.method;
   }
 
+  getCategoryField(length, index) {
+    if (length > 1) {
+      return `category_${index}`;
+    }
+
+    return 'category';
+  }
+
   addSegmentField(query) {
     if (!this.config.segment) {
       return query;
@@ -33,99 +41,93 @@ export default class AggregatingConfig {
     return query;
   }
 
-  build(table, indexingConfig) {
+  build(table, indexings) {
     const method = this.config.method.toUpperCase();
 
-    if (indexingConfig.method && indexingConfig.method.match(/each/)) {
-      return this.parseWithEachDate(table, method, indexingConfig, getDateFormatQuery(this.config.db, addBacktick(indexingConfig.field), indexingConfig.method));
-    }
+    const query = squel.select()
+      .field(`${method}(${addBacktick(this.field)})`, 'value');
 
-    if (indexingConfig.interval) {
-      return this.parseWithInterval(table, method, indexingConfig);
-    }
+    indexings.forEach((indexing, index) => {
+      if (indexing.method && indexing.method.match(/each/)) {
+        return this.parseWithEachDate(query, table, method, indexing, index, indexings.length);
+      }
 
-    if (indexingConfig.categoryRange && indexingConfig.categoryRange.length < 2) {
-      throw new Error('Invalid categoryRange. categoryRange must be more than 2');
-    }
+      if (indexing.interval) {
+        return this.parseWithInterval(query, table, method, indexing, index, indexings.length);
+      }
 
-    if (indexingConfig.categoryRange) {
-      return this.parseWithCategoryRange(table, method, indexingConfig);
-    }
+      if (indexing.categoryRange && indexing.categoryRange.length < 2) {
+        throw new Error('Invalid categoryRange. categoryRange must be more than 2');
+      }
 
-    return this.parse(table, method, addBacktick(indexingConfig.field));
-  }
+      if (indexing.categoryRange) {
+        return this.parseWithCategoryRange(query, table, method, indexing, index, indexings.length);
+      }
 
-  parse(table, method, indexedValue) {
-    const query = squel
-      .select()
-      .field(`${method}(${addBacktick(this.field)})`, 'value')
-      .field(`${indexedValue}`, 'category');
+      this.parse(query, table, method, indexing, index, indexings.length);
+    });
 
     this.addSegmentField(query);
 
-    query
-      .from(table, 'indexing_table')
-      .group(`${indexedValue}`);
+    query.from(table, 'indexing_table');
 
     return query;
   }
 
-  parseWithEachDate(table, method, indexedValue, term) {
-    const query = squel
-      .select()
-      .field(`${method}(${addBacktick(this.field)})`, 'value')
-      .field(term, 'category');
+  parse(query, table, method, indexingConfig, index, indexingsLength) {
+    const indexedValue = addBacktick(getIndexedValue(index));
 
-    this.addSegmentField(query);
+    query.field(indexedValue, this.getCategoryField(indexingsLength, index));
 
-    query
-      .from(table, 'indexing_table')
-      .group(term);
+    query.group(`${indexedValue}`);
 
     return query;
   }
 
-  parseWithInterval(table, method, indexingConfig) {
-    const intervalString = `FLOOR(${addBacktick(indexingConfig.field)} / ${indexingConfig.interval})`;
+  parseWithEachDate(query, table, method, indexingConfig, index, indexingsLength) {
+    const indexedValue = addBacktick(getIndexedValue(index));
 
-    const query = squel
-      .select()
-      .field(`${method}(${addBacktick(this.field)})`, 'value')
-      .field(intervalString, 'category');
+    const term = getDateFormatQuery(this.config.db, indexedValue, indexingConfig.method);
 
-    this.addSegmentField(query);
+    query.field(term, this.getCategoryField(indexingsLength, index));
 
-    query
-      .from(table, 'indexing_table')
-      .group(intervalString);
+    query.group(term);
 
     return query;
   }
 
-  parseWithCategoryRange(table, method, indexingConfig) {
+  parseWithInterval(query, table, method, indexingConfig, index, indexingsLength) {
+    const indexedValue = addBacktick(getIndexedValue(index));
+
+    const intervalString = `FLOOR(${indexedValue} / ${indexingConfig.interval})`;
+
+    query.field(intervalString, this.getCategoryField(indexingsLength, index));
+
+    query.group(intervalString);
+
+    return query;
+  }
+
+  parseWithCategoryRange(query, table, method, indexingConfig, index, indexingsLength) {
+    const indexedValue = addBacktick(getIndexedValue(index));
+
     const categoryRange = indexingConfig.categoryRange;
+
     const categoryRangeQuery = squel.case();
 
-    categoryRange.forEach((category, index) => {
-      if (index === categoryRange.length - 1) {
+    categoryRange.forEach((category, i) => {
+      if (i === categoryRange.length - 1) {
         return;
       }
 
       categoryRangeQuery
-        .when(`${category} <= ${addBacktick(indexingConfig.field)} AND ${addBacktick(indexingConfig.field)} < ${categoryRange[index + 1]}`)
+        .when(`${category} <= ${indexedValue} AND ${indexedValue} < ${categoryRange[i + 1]}`)
         .then(category);
-    }, this);
+    });
 
-    const query = squel
-      .select()
-      .field(`${method}(${addBacktick(this.field)})`, 'value')
-      .field(categoryRangeQuery, 'category');
+    query.field(categoryRangeQuery, this.getCategoryField(indexingsLength, index));
 
-    this.addSegmentField(query);
-
-    query
-      .from(table, 'indexing_table')
-      .group(categoryRangeQuery);
+    query.group(categoryRangeQuery);
 
     return query;
   }
