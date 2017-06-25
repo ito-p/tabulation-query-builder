@@ -1,6 +1,6 @@
 import squel from 'squel';
 
-import getDateFormatQuery from '../utils/getDateFormatQuery';
+import { getDateFormatQuery, getTimezoneConvertedDatetime } from '../utils/TimeUtils';
 
 import { addBacktick, getIndexedValue } from '../utils/StringDecorator';
 
@@ -16,7 +16,7 @@ export default class MatchingConfig {
 
     indexings.forEach((indexing, index) => {
       if (indexing.method && indexing.method.match(/each/) && aggregating.method === 'count') {
-        const dateFormatField = getDateFormatQuery(this.config.db, addBacktick(indexing.field), indexing.method);
+        const dateFormatField = getDateFormatQuery(this.config.db, addBacktick(indexing.field), indexing.method, this.config.timezone);
 
         query.field(dateFormatField, getIndexedValue(index));
       } else {
@@ -43,7 +43,7 @@ export default class MatchingConfig {
     }
 
     if (conf.range) {
-      return this.parseRange(conf.field, conf.range);
+      return this.parseRange(conf.field, conf.range, conf.type);
     }
 
     if (conf.in) {
@@ -51,7 +51,7 @@ export default class MatchingConfig {
     }
 
     if (conf.operator) {
-      return this.parseOperator(conf.field, conf.operator, conf.value);
+      return this.parseOperator(conf.field, conf.operator, conf.value, conf.type);
     }
   }
 
@@ -59,12 +59,24 @@ export default class MatchingConfig {
     return `${field} IN (${inStatement.map(statement => `"${statement}"`).join(',')})`;
   }
 
-  parseRange(field, range) {
-    return `"${range[0]}" <= ${field} AND ${field} <= "${range[1]}"`;
+  parseRange(field, range, type) {
+    let rangeField = field;
+
+    if (type === 'datetime') {
+      rangeField = getTimezoneConvertedDatetime(field, this.config.timezone);
+    }
+
+    return `"${range[0]}" <= ${rangeField} AND ${rangeField} <= "${range[1]}"`;
   }
 
-  parseOperator(field, operator, value) {
-    return `${field} ${operator} "${value}"`;
+  parseOperator(field, operator, value, type) {
+    let rangeField = field;
+
+    if (type === 'datetime') {
+      rangeField = getTimezoneConvertedDatetime(field, this.config.timezone);
+    }
+
+    return `${rangeField} ${operator} "${value}"`;
   }
 
   parseTerm(builder, conf) {

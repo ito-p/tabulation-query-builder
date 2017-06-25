@@ -353,3 +353,32 @@ test('Top sales by item and time of hours', t => {
 
   t.is(tqb.build(), 'SELECT SUM(`price`) AS "value", DATE_FORMAT(`indexed_value_0`, "%H") AS "category_0", `indexed_value_1` AS "category_1" FROM (SELECT timestamp AS "indexed_value_0", item AS "indexed_value_1", price FROM payment_logs WHERE ("2017-01-01 00:00:00" <= timestamp AND timestamp <= "2017-01-07 23:59:59")) `indexing_table` GROUP BY DATE_FORMAT(`indexed_value_0`, "%H"), `indexed_value_1`');
 });
+
+test('Timezone convert option with matching and indexing', t => {
+  const tqb = new TabulationQueryBuilder({
+    timezone: {
+      from: 'UTC',
+      to: 'Asia/Tokyo'
+    }
+  });
+
+  tqb.setTable('payment_logs');
+
+  tqb.setMatching({
+    field: 'timestamp',
+    range: [ '2017-01-01 00:00:00', '2017-01-07 23:59:59' ],
+    type: 'datetime'
+  });
+
+  tqb.setAggregating({
+    field: 'user_id',
+    method: 'count'
+  });
+
+  tqb.setIndexing({
+    field: 'timestamp',
+    method: 'eachDays'
+  });
+
+  t.is(tqb.build(), 'SELECT COUNT(`user_id`) AS "value", `indexed_value_0` AS "category" FROM (SELECT `indexed_value_0`, `user_id` FROM (SELECT DATE_FORMAT(CONVERT_TZ(`timestamp`, "UTC", "Asia/Tokyo"), "%Y-%m-%d") AS "indexed_value_0", user_id FROM payment_logs WHERE ("2017-01-01 00:00:00" <= CONVERT_TZ(timestamp, "UTC", "Asia/Tokyo") AND CONVERT_TZ(timestamp, "UTC", "Asia/Tokyo") <= "2017-01-07 23:59:59")) `matching_table` GROUP BY `indexed_value_0`, `user_id`) `indexing_table` GROUP BY `indexed_value_0`');
+});

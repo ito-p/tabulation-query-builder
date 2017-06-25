@@ -2,7 +2,7 @@ import squel from 'squel';
 
 import { addBacktick, getIndexedValue } from '../utils/StringDecorator';
 
-import getDateFormatQuery from '../utils/getDateFormatQuery';
+import { getDateFormatQuery } from '../utils/TimeUtils';
 
 export default class AggregatingConfig {
   config;
@@ -87,7 +87,7 @@ export default class AggregatingConfig {
   parseWithEachDate(query, table, method, indexingConfig, index, indexingsLength) {
     const indexedValue = addBacktick(getIndexedValue(index));
 
-    const term = getDateFormatQuery(this.config.db, indexedValue, indexingConfig.method);
+    const term = getDateFormatQuery(this.config.db, indexedValue, indexingConfig.method, this.config.timezone);
 
     query.field(term, this.getCategoryField(indexingsLength, index));
 
